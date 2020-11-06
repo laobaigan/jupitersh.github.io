@@ -1,0 +1,676 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/icon.png">
+  <link rel="icon" type="image/png" href="/img/icon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="辣椒小皇纸">
+  <meta name="keywords" content="">
+  <title>利用 OpenVPN 加速饥荒服务器 - 辣椒手记</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.1.2/styles/monokai-sublime.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+  
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC&display=swap.css">
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"peppernotes.top","root":"/","version":"1.8.5","typing":{"enable":true,"typeSpeed":70,"cursorChar":"♥","loop":false},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"copy_btn":true,"image_zoom":{"enable":true},"lazyload":{"enable":false,"onlypost":false},"web_analytics":{"enable":true,"baidu":"d5789316175edf52298e98f64043f39b","google":"UA-172924260-1","gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":"URm4KfhnXhSbqwY8C1zIBw4x-MdYXbMMI","app_key":"lh77VzmHrjLqi9khKQgEneGy","server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>辣椒手记</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner intro-2" id="background" parallax=true
+         style="background: url('/img/post_background/dst.webp') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="利用 OpenVPN 加速饥荒服务器">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2020-08-17 18:52" pubdate>
+        2020-08-17 18:52
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      755 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      9
+       分钟
+    </span>
+  
+
+  
+  
+    
+      <!-- LeanCloud 统计文章PV -->
+      <span id="leancloud-page-views-container" class="post-meta" style="display: none">
+        <i class="iconfont icon-eye" aria-hidden="true"></i>
+        <span id="leancloud-page-views"></span> 次
+      </span>
+    
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">利用 OpenVPN 加速饥荒服务器</h1>
+            
+              <p class="note note-info">
+                
+                  本文最后更新于：2020-08-27 17:50
+                
+              </p>
+            
+            <div class="markdown-body">
+              <p><strong>郑重声明：本文仅用于搭建饥荒游戏服务器用，禁止用于任何违反国家法律的用途！</strong></p>
+<a id="more"></a>
+
+<p>开饥荒服务器1年多以来，在服务器的开销上已有 ￥3000 多，足以我买一台物理主机来做饥荒服务器了。接下来几个月，手头上的服务器也要陆续到期了，就趁着这个机会买个物理主机搭服务器吧。</p>
+<p>但是，物理主机有个致命的缺点就是网络，不同运营商网络的玩家或者不同地区的玩家连接延迟参差不齐。</p>
+<p>在封锁和时光档服主小水的指点下，我摸索了一套利用 OpenVPN 加速本地物理主机的方法，让小伙伴们连接不再卡顿。</p>
+<h2 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h2><ul>
+<li>云服务器<br>  云服务器是用来加速你的物理主机的，配置不重要，重要的是带宽，这决定了你的玩家数。一般1m带宽可以带4-6个玩家。</li>
+<li>物理主机</li>
+<li>OpenVPN一键脚本<br>  <a href="https://github.com/Nyr/openvpn-install" target="_blank" rel="noopener">openvpn-install</a></li>
+</ul>
+<p>云服务器和物理主机我安装的都是 Ubuntu Server 18.04 系统。</p>
+<h2 id="云服务器部分"><a href="#云服务器部分" class="headerlink" title="云服务器部分"></a>云服务器部分</h2><h3 id="1-安装-Git"><a href="#1-安装-Git" class="headerlink" title="1. 安装 Git"></a>1. 安装 Git</h3><div class="hljs"><pre><code class="hljs bash">sudo apt update
+sudo apt install git</code></pre></div>
+
+<h3 id="2-克隆-OpenVPN-一键脚本的仓库"><a href="#2-克隆-OpenVPN-一键脚本的仓库" class="headerlink" title="2. 克隆 OpenVPN 一键脚本的仓库"></a>2. 克隆 OpenVPN 一键脚本的仓库</h3><div class="hljs"><pre><code class="hljs bash">git <span class="hljs-built_in">clone</span> https://github.com/Nyr/openvpn-install.git</code></pre></div>
+
+<h3 id="3-运行一键脚本"><a href="#3-运行一键脚本" class="headerlink" title="3.运行一键脚本"></a>3.运行一键脚本</h3><p>执行下面三行：</p>
+<div class="hljs"><pre><code class="hljs bash"><span class="hljs-built_in">cd</span> openvpn-install
+chmod +x openvpn-install.sh
+sudo ./openvpn-install.sh</code></pre></div>
+
+<p>运行脚本后会看到：</p>
+<div class="hljs"><pre><code class="hljs routeros">Welcome <span class="hljs-keyword">to</span> this OpenVPN road warrior installer!
+
+This<span class="hljs-built_in"> server </span>is behind NAT. What is the public IPv4<span class="hljs-built_in"> address </span><span class="hljs-keyword">or</span> hostname?
+Public IPv4<span class="hljs-built_in"> address </span>/ hostname [49.235.180.43]:</code></pre></div>
+
+<p>直接回车</p>
+<div class="hljs"><pre><code class="hljs angelscript">Which protocol should OpenVPN use?
+   <span class="hljs-number">1</span>) UDP (recommended)
+   <span class="hljs-number">2</span>) TCP
+Protocol [<span class="hljs-number">1</span>]:</code></pre></div>
+
+<p>我们按默认的 UDP 模式，也直接回车</p>
+<div class="hljs"><pre><code class="hljs routeros">What<span class="hljs-built_in"> port </span>should OpenVPN listen <span class="hljs-keyword">to</span>?
+Port [1194]:</code></pre></div>
+
+<p>端口也默认，直接回车</p>
+<div class="hljs"><pre><code class="hljs routeros">Select a<span class="hljs-built_in"> DNS server </span><span class="hljs-keyword">for</span> the clients:
+   1) Current<span class="hljs-built_in"> system </span>resolvers
+   2) Google
+   3) 1.1.1.1
+   4) OpenDNS
+   5) Quad9
+   6) AdGuard
+DNS<span class="hljs-built_in"> server </span>[1]:</code></pre></div>
+
+<p>DNS 也默认，直接回车</p>
+<div class="hljs"><pre><code class="hljs livecodeserver">Enter <span class="hljs-keyword">a</span> name <span class="hljs-keyword">for</span> <span class="hljs-keyword">the</span> <span class="hljs-keyword">first</span> client:
+Name [client]:</code></pre></div>
+
+<p>客户端配置文件名也默认，直接回车</p>
+<div class="hljs"><pre><code class="hljs delphi">OpenVPN installation <span class="hljs-keyword">is</span> ready <span class="hljs-keyword">to</span> <span class="hljs-keyword">begin</span>.
+Press any key <span class="hljs-keyword">to</span> <span class="hljs-keyword">continue</span>...</code></pre></div>
+
+<p>直接回车安装，看到下面的提示，说明安装完成，配置文件在 <code>/home/ubuntu/client.ovpn</code>，将它下载物理主机上</p>
+<div class="hljs"><pre><code class="hljs routeros">Finished!
+
+The<span class="hljs-built_in"> client </span>configuration is available <span class="hljs-keyword">in</span>: /home/ubuntu/client.ovpn
+New clients can be added by running this<span class="hljs-built_in"> script </span>again.</code></pre></div>
+
+<h2 id="物理主机部分"><a href="#物理主机部分" class="headerlink" title="物理主机部分"></a>物理主机部分</h2><blockquote>
+<p>Windows 主机的话方法很简单，官网下载 OpenVPN 客户端，傻瓜式操作</p>
+</blockquote>
+<p>将 <code>client.ovpn</code> 放到你主文件夹内，即 <code>/home/用户名/</code></p>
+<h3 id="1-安装-OpenVPN-和-screen"><a href="#1-安装-OpenVPN-和-screen" class="headerlink" title="1. 安装 OpenVPN 和 screen"></a>1. 安装 OpenVPN 和 screen</h3><div class="hljs"><pre><code class="hljs bash">sudo apt update
+sudo apt install openvpn screen</code></pre></div>
+
+<h3 id="2-修改配置文件"><a href="#2-修改配置文件" class="headerlink" title="2. 修改配置文件"></a>2. 修改配置文件</h3><div class="hljs"><pre><code class="hljs bash">nano ~/client.ovpn</code></pre></div>
+
+<p>在最下面添加下面三行内容</p>
+<div class="hljs"><pre><code class="hljs vim">script-security <span class="hljs-number">2</span>
+<span class="hljs-keyword">up</span> /etc/openvpn/<span class="hljs-keyword">update</span>-resolv-<span class="hljs-keyword">conf</span>
+down /etc/openvpn/<span class="hljs-keyword">update</span>-resolv-<span class="hljs-keyword">conf</span></code></pre></div>
+
+<p>保存退出</p>
+<h3 id="2-开启-OpenVPN"><a href="#2-开启-OpenVPN" class="headerlink" title="2.开启 OpenVPN"></a>2.开启 OpenVPN</h3><div class="hljs"><pre><code class="hljs bash">screen -S openvpn
+openvpn --config ~/client.ovpn</code></pre></div>
+
+<p>然后按 <code>Ctrl</code> + <code>A</code>，再按 <code>D</code> 退出 screen 即可</p>
+<h2 id="运行饥荒服务器"><a href="#运行饥荒服务器" class="headerlink" title="运行饥荒服务器"></a>运行饥荒服务器</h2><p>这部分具体看我博客的其他文章</p>
+<h2 id="后续工作"><a href="#后续工作" class="headerlink" title="后续工作"></a>后续工作</h2><p>详见 <a href="/2020/08/frp">利用 frp 进行内网穿透</a></p>
+<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><p><a href="https://github.com/Nyr/openvpn-install" target="_blank" rel="noopener">Nyr/openvpn-install: OpenVPN road warrior installer for Ubuntu, Debian, CentOS and Fedora</a><br><a href="https://openvpn.net/vpn-server-resources/connecting-to-access-server-with-linux/" target="_blank" rel="noopener">Linux Connection Guide For OpenVPN Access Server | OpenVPN</a><br><a href="https://www.codewoody.com/posts/38823/" target="_blank" rel="noopener">Linux下OpenVPN客户端配置 | 治部少辅</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/IT/">IT</a>
+                    
+                      <a class="hover-with-bg" href="/categories/%E6%B8%B8%E6%88%8F/">游戏</a>
+                    
+                      <a class="hover-with-bg" href="/categories/%E6%B8%B8%E6%88%8F/%E9%A5%A5%E8%8D%92/">饥荒</a>
+                    
+                      <a class="hover-with-bg" href="/categories/IT/%E7%BD%91%E7%BB%9C%E4%BB%A3%E7%90%86/">网络代理</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E9%A5%A5%E8%8D%92/">饥荒</a>
+                    
+                      <a class="hover-with-bg" href="/tags/OpenVPN/">OpenVPN</a>
+                    
+                  </div>
+                
+              </div>
+              
+              
+                <div class="post-prevnext row">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2020/08/frp/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">利用 frp 进行内网穿透</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2020/07/rmultipleimputation/">
+                        <span class="hidden-mobile">R 语言：缺失数据的多重插补</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                
+  <div id="vcomments"></div>
+  <script type="text/javascript">
+    Fluid.utils.waitElementVisible('vcomments', function() {
+      Fluid.utils.createScript('https://cdn.staticfile.org/valine/1.4.14/Valine.min.js', function () {
+        new Valine({
+          el: "#vcomments",
+          app_id: "URm4KfhnXhSbqwY8C1zIBw4x-MdYXbMMI",
+          app_key: "lh77VzmHrjLqi9khKQgEneGy",
+          placeholder: "ヾﾉ≧∀≦)o来啊，快活啊!",
+          path: window.location.pathname,
+          avatar: "wavatar",
+          meta: ["nick","mail","link"],
+          pageSize: "10",
+          lang: "zh-CN",
+          highlight: true,
+          recordIP: true,
+          serverURLs: "",
+        });
+      });
+    });
+  </script>
+  <noscript>Please enable JavaScript to view the
+    <a href="https://valine.js.org" target="_blank" rel="nofollow noopener noopener">comments powered by Valine.</a>
+  </noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <div> <span id="timeDate">载入天数...</span> <span id="times">载入时分秒...</span> <script> var now = new Date(); function createtime(){ var grt= new Date("09/18/2019 00:00:00"); now.setTime(now.getTime()+250); days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days); hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours); if(String(hnum).length ==1 ){ hnum = "0" + hnum; } minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum); mnum = Math.floor(minutes); if(String(mnum).length ==1 ){ mnum = "0" + mnum; } seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum); snum = Math.round(seconds); if(String(snum).length ==1 ){ snum = "0" + snum; } document.getElementById("timeDate").innerHTML = "本站安全运行&nbsp"+dnum+"&nbsp天"; document.getElementById("times").innerHTML = hnum + "&nbsp小时&nbsp" + mnum + "&nbsp分&nbsp" + snum + "&nbsp秒"; } setInterval("createtime()",250); </script> </div> 
+  </div>
+  
+  <div class="statistics">
+    
+    
+
+    
+      
+        <!-- LeanCloud 统计PV -->
+        <span id="leancloud-site-pv-container" style="display: none">
+            总访问量 
+            <span id="leancloud-site-pv"></span>
+             次
+          </span>
+      
+      
+        <!-- LeanCloud 统计UV -->
+        <span id="leancloud-site-uv-container" style="display: none">
+            总访客数 
+            <span id="leancloud-site-uv"></span>
+             人
+          </span>
+      
+
+    
+  </div>
+
+
+  
+  <!-- 备案信息 -->
+  <div class="beian">
+    <a href="http://beian.miit.gov.cn/" target="_blank"
+       rel="nofollow noopener">浙ICP备20025824号</a>
+    
+      
+        <a
+          href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=33032202000176"
+          rel="nofollow noopener"
+          class="beian-police"
+          target="_blank"
+        >
+          
+            <span style="visibility: hidden; width: 0">|</span>
+            <img src="/img/police_beian.png" alt="police-icon"/>
+          
+          <span>浙公网安备33032202000176号</span>
+        </a>
+      
+    
+  </div>
+
+
+  
+</footer>
+
+<!-- SCRIPTS -->
+
+  <script  src="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":200})
+    NProgress.start()
+    document.addEventListener('DOMContentLoaded', function() {
+      window.NProgress && window.NProgress.inc();
+    })
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.5.3/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+
+
+  
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.12.0/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+
+
+
+  <script defer src="/js/leancloud.js" ></script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      var inputArea = document.querySelector("#local-search-input");
+      inputArea.onclick = function () {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+        this.onclick = null
+      }
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+    <!-- Baidu Analytics -->
+    <script defer>
+      var _hmt = _hmt || [];
+      (function () {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?d5789316175edf52298e98f64043f39b";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+  
+
+  
+    <!-- Google Analytics -->
+    <script defer>
+      window.ga = window.ga || function () { (ga.q = ga.q || []).push(arguments) };
+      ga.l = +new Date;
+      ga('create', 'UA-172924260-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+    <script async src='https://www.google-analytics.com/analytics.js'></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+
+</body>
+</html>
